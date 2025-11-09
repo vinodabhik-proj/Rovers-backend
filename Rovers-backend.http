@@ -1,0 +1,6 @@
+@Rovers_backend_HostAddress = http://localhost:5234
+
+GET {{Rovers_backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
