@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Rovers-backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5a9dfe3dfdea92c5f970b9cf018857b6c615a5ac")]
 [assembly: System.Reflection.AssemblyProductAttribute("Rovers-backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Rovers-backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
