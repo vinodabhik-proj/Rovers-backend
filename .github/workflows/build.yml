@@ -16,8 +16,8 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Restore dependencies
-        run: dotnet restore ./Rovers.Api
+        run: dotnet restore ./Rovers-backend
       - name: Build
-        run: dotnet build --no-restore ./Rovers.Api
+        run: dotnet build --no-restore ./Rovers-backend
       - name: Run tests
         run: dotnet test --no-build --verbosity normal
