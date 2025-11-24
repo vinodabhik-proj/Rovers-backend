@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using Rovers_backend.Api.Middleware;
+using Rovers_backend.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,11 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add DbConnection
+builder.Services.AddDbContext<RoversDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // CORS policy for dev (change for stagining and prod)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
-        policy => policy.WithOrigins("http://localhost:5173")
+        policy => policy.WithOrigins(["http://localhost:5173", "http://localhost:5174"])
                         .AllowAnyHeader()
                         .AllowAnyMethod());
 });
@@ -17,6 +25,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandler>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
