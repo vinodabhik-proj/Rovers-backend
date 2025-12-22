@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Rovers_backend</RootNamespace>
     <UserSecretsId>5ca33a99-32e3-4631-84b7-5ebec5b21900</UserSecretsId>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
