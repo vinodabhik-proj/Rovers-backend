@@ -18,6 +18,7 @@ public class ExceptionHandlerTests
     {
         // Arrange
         var context = new DefaultHttpContext();
+        context.Response.Body = new MemoryStream();
         var logger = new Mock<ILogger<ExceptionHandler>>();
         var env = new Mock<IHostEnvironment>();
         env.Setup(e => e.EnvironmentName).Returns(Environments.Development);
