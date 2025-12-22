@@ -20,7 +20,7 @@ public class ExceptionHandlerTests
         var context = new DefaultHttpContext();
         var logger = new Mock<ILogger<ExceptionHandler>>();
         var env = new Mock<IHostEnvironment>();
-        env.Setup(e => e.IsDevelopment()).Returns(true);
+        env.Setup(e => e.EnvironmentName).Returns(Environments.Development);
 
         RequestDelegate next = _ => throw new Exception("Exception Thrown!");
 
