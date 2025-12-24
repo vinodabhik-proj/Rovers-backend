@@ -13,18 +13,25 @@ public class CustomWebApplicationFactory
     {
         builder.ConfigureServices(services =>
         {
-            // Remove real DB
+            // Remove real DB registration
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<RoversDbContext>));
 
             if (descriptor != null)
                 services.Remove(descriptor);
 
-            // Add InMemory DB
+            // IMPORTANT: unique DB per factory instance
             services.AddDbContext<RoversDbContext>(options =>
             {
-                options.UseInMemoryDatabase("TestDb");
+                options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
             });
+
+            // Ensure DB is created
+            var sp = services.BuildServiceProvider();
+            using var scope = sp.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<RoversDbContext>();
+            db.Database.EnsureCreated();
         });
     }
 }
+

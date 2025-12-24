@@ -44,4 +44,31 @@ public class ExceptionHandlerTests
         error!.Message.Should().Be("Exception Thrown!");
         error.StatusCode.Should().Be(500);
     }
+    
+    [Fact]
+    public async Task Middleware_InProduction_HidesExceptionMessage()
+    {
+        var context = new DefaultHttpContext();
+        context.Response.Body = new MemoryStream();
+
+        var logger = new Mock<ILogger<ExceptionHandler>>();
+        var env = new Mock<IHostEnvironment>();
+        env.Setup(e => e.EnvironmentName).Returns(Environments.Production);
+
+        RequestDelegate next = _ => throw new Exception("Sensitive Error");
+
+        var middleware = new ExceptionHandler(next, logger.Object, env.Object);
+
+        await middleware.InvokeAsync(context);
+
+        context.Response.Body.Seek(0, SeekOrigin.Begin);
+        var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
+
+        var error = JsonSerializer.Deserialize<ErrorResponse>(
+            responseBody,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        error!.Message.Should().Be("Unexpected Server Error");
+        error.StatusCode.Should().Be(500);
+    }
 }
