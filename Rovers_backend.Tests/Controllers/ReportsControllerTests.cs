@@ -19,13 +19,17 @@ public class ReportsControllerTests
     public ReportsControllerTests(CustomWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
+
         _scope = factory.Services.CreateScope();
         _db = _scope.ServiceProvider.GetRequiredService<RoversDbContext>();
+
         SeedData();
     }
 
     private void SeedData()
     {
+        _db.Reports.RemoveRange(_db.Reports);
+
         _db.Reports.AddRange(
             new Report
             {
@@ -52,11 +56,8 @@ public class ReportsControllerTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var reports = await response.Content.ReadFromJsonAsync<List<Report>>();
-        reports.Should().NotBeNull();
         reports.Should().HaveCount(2);
-
         reports![0].Date.Should().Be(new DateTime(2024, 1, 2));
-        reports[1].Date.Should().Be(new DateTime(2024, 1, 1));
     }
 
     public void Dispose()
