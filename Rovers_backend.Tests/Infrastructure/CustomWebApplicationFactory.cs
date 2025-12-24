@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Rovers_backend.Data;
@@ -9,7 +10,7 @@ namespace Rovers_backend.Tests.Infrastructure;
 public class CustomWebApplicationFactory
     : WebApplicationFactory<Program>
 {
-    private readonly string _dbName = $"TestDb_{Guid.NewGuid()}";
+    private SqliteConnection? _connection;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -21,11 +22,22 @@ public class CustomWebApplicationFactory
             if (descriptor != null)
                 services.Remove(descriptor);
 
+            _connection = new SqliteConnection("DataSource=:memory:");
+            _connection.Open();
+
             services.AddDbContext<RoversDbContext>(options =>
             {
-                options.UseInMemoryDatabase(_dbName);
+                options.UseSqlite(_connection);
             });
         });
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        _connection?.Dispose();
+    }
 }
+
+
 

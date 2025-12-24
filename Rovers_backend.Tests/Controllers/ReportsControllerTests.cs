@@ -23,8 +23,10 @@ public class ReportsControllerTests
         _scope = factory.Services.CreateScope();
         _db = _scope.ServiceProvider.GetRequiredService<RoversDbContext>();
 
+        _db.Database.EnsureCreated();
         SeedData();
     }
+
 
     private void SeedData()
     {
