@@ -10,7 +10,7 @@ using Xunit;
 namespace Rovers_backend.Tests.Controllers;
 
 public class ReportsControllerTests
-    : IClassFixture<CustomWebApplicationFactory>
+    : IClassFixture<CustomWebApplicationFactory>, IDisposable
 {
     private readonly HttpClient _client;
     private readonly IServiceScope _scope;
@@ -19,19 +19,32 @@ public class ReportsControllerTests
     public ReportsControllerTests(CustomWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
+
         _scope = factory.Services.CreateScope();
         _db = _scope.ServiceProvider.GetRequiredService<RoversDbContext>();
+
+        _db.Database.EnsureCreated();
         SeedData();
     }
+
 
     private void SeedData()
     {
         _db.Reports.RemoveRange(_db.Reports);
-        _db.SaveChanges();
 
         _db.Reports.AddRange(
-            new Report { Date = DateTime.UtcNow.AddDays(-1), RoversScore = 2, OppoScore = 1 },
-            new Report { Date = DateTime.UtcNow, RoversScore = 3, OppoScore = 0 }
+            new Report
+            {
+                Date = new DateTime(2024, 1, 1),
+                RoversScore = 2,
+                OppoScore = 1
+            },
+            new Report
+            {
+                Date = new DateTime(2024, 1, 2),
+                RoversScore = 3,
+                OppoScore = 0
+            }
         );
 
         _db.SaveChanges();
@@ -40,15 +53,17 @@ public class ReportsControllerTests
     [Fact]
     public async Task GetReports_Returns200AndOrderedReports()
     {
-        // Act
         var response = await _client.GetAsync("/api/reports");
 
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var reports = await response.Content.ReadFromJsonAsync<List<Report>>();
-        reports.Should().NotBeNull();
-        reports!.Count.Should().Be(2);
-        reports[0].Date.Should().BeAfter(reports[1].Date);
+        reports.Should().HaveCount(2);
+        reports![0].Date.Should().Be(new DateTime(2024, 1, 2));
+    }
+
+    public void Dispose()
+    {
+        _scope.Dispose();
     }
 }
