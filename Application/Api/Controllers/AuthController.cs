@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Rovers_backend.Models;
-using System.Security.Claims;
 using Microsoft.Extensions.Options;
+using Rovers_backend.Models;
 using Rovers_backend.Options;
 
 namespace Rovers_backend.Controllers;
@@ -25,55 +27,104 @@ public class AuthController : ControllerBase
         _frontend = frontendOptions.Value;
     }
 
-    [HttpGet("auth/facebook/login")]
-    public IActionResult FacebookLogin()
+    [HttpGet("auth/entra/login")]
+    public IActionResult EntraLogin(string? returnUrl = null)
     {
-        var props = new AuthenticationProperties
+        // Store return URL for after authentication
+        var properties = new AuthenticationProperties
         {
-            RedirectUri = "/auth/facebook/callback"
+            RedirectUri = string.IsNullOrEmpty(returnUrl) 
+                ? _frontend.BaseUrl 
+                : $"{_frontend.BaseUrl}{returnUrl}",
+            IsPersistent = true
         };
 
-        return Challenge(props, "Facebook");
+        return Challenge(properties, OpenIdConnectDefaults.AuthenticationScheme);
     }
 
-    [HttpGet("auth/facebook/callback")]
-    public async Task<IActionResult> FacebookCallback()
+    // [HttpGet("auth/entra/callback")]
+    // public async Task<IActionResult> EntraCallback(string? returnUrl = null)
+    // {
+    //     try
+    //     {
+    //         Console.WriteLine("Point Reached!");
+    //         // The user is already authenticated at this point via OpenIdConnect middleware
+    //         if (User?.Identity?.IsAuthenticated == true)
+    //         {
+    //             Console.WriteLine("User is Authenticated");
+    //             var email = User.FindFirst("preferred_username")?.Value
+    //                        ?? User.FindFirst("email")?.Value;
+
+    //             if (!string.IsNullOrEmpty(email))
+    //             {
+    //                 var user = await _userManager.FindByEmailAsync(email);
+
+    //                 if (user != null)
+    //                 {
+    //                     // Sign in with Identity to establish session
+    //                     await _signInManager.SignInAsync(user, isPersistent: true);
+    //                 }
+    //             }
+
+    //             var finalUrl = string.IsNullOrEmpty(returnUrl)
+    //                 ? _frontend.BaseUrl
+    //                 : $"{_frontend.BaseUrl}{returnUrl}";
+
+    //             return Redirect(finalUrl);
+    //         }
+
+    //         Console.WriteLine("User is not authenticated");
+    //         return Redirect($"{_frontend.BaseUrl}/login?error=auth_failed");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"Exception in EntraCallback: {ex.Message}");
+    //         return Redirect($"{_frontend.BaseUrl}/login?error=exception");
+    //     }
+    // }
+
+    [Authorize]
+    [HttpGet("auth/user")]
+    public async Task<IActionResult> Me()
     {
-        var info = await _signInManager.GetExternalLoginInfoAsync();
-
-        if (info == null)
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
         {
-            return Redirect($"{_frontend.BaseUrl}/login?error=oauth");
+            return Unauthorized();
         }
 
-        Console.WriteLine("Point Reached");
+        var roles = await _userManager.GetRolesAsync(user);
 
-        var signInResult = await _signInManager.ExternalLoginSignInAsync(
-            info.LoginProvider,
-            info.ProviderKey,
-            isPersistent: true);
-
-        if (!signInResult.Succeeded)
+        return Ok(new
         {
-            var firstName = info.Principal.FindFirstValue("first_name") ?? "";
-            var lastName = info.Principal.FindFirstValue("last_name") ?? "";
-            var email = info.Principal.FindFirstValue("email") ?? "";
+            Id = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            UserName = user.UserName,
+            Roles = roles
+        });
+    }
 
-            var user = new ApplicationUser
-            {
-                UserName = Guid.NewGuid().ToString(),
-                FirstName = firstName,
-                LastName = lastName,
-                Email = email
-            };
+    [Authorize]
+    [HttpPost("auth/logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        
+        // Sign out from Entra ID
+        var callbackUrl = Url.Action(nameof(SignOutCallback), "Auth", null, Request.Scheme);
+        
+        return SignOut(
+            new AuthenticationProperties { RedirectUri = callbackUrl },
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            OpenIdConnectDefaults.AuthenticationScheme
+        );
+    }
 
-            await _userManager.CreateAsync(user);
-            await _userManager.AddLoginAsync(user, info);
-            await _userManager.AddToRoleAsync(user, "User");
-
-            await _signInManager.SignInAsync(user, isPersistent: true);
-        }
-
+    [HttpGet("auth/signout-callback")]
+    public IActionResult SignOutCallback()
+    {
         return Redirect(_frontend.BaseUrl);
     }
 }
