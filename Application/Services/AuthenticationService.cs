@@ -48,6 +48,37 @@ public class AuthenticationService
         else
         {
             _logger.LogInformation("User found: {Email}", email);
+            
+            // Update user names if they're empty or changed
+            var firstName = context.Principal?.FindFirst("given_name")?.Value 
+                           ?? context.Principal?.FindFirst("givenname")?.Value 
+                           ?? context.Principal?.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value
+                           ?? context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
+            
+            var lastName = context.Principal?.FindFirst("family_name")?.Value 
+                          ?? context.Principal?.FindFirst("surname")?.Value 
+                          ?? context.Principal?.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")?.Value
+                          ?? context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.Surname)?.Value;
+            
+            bool needsUpdate = false;
+            
+            if (!string.IsNullOrEmpty(firstName) && user.FirstName != firstName)
+            {
+                user.FirstName = firstName;
+                needsUpdate = true;
+            }
+            
+            if (!string.IsNullOrEmpty(lastName) && user.LastName != lastName)
+            {
+                user.LastName = lastName;
+                needsUpdate = true;
+            }
+            
+            if (needsUpdate)
+            {
+                await _userManager.UpdateAsync(user);
+                _logger.LogInformation("Updated user profile: {FirstName} {LastName}", user.FirstName, user.LastName);
+            }
         }
 
         // Sign in the user with Identity
@@ -58,9 +89,24 @@ public class AuthenticationService
     private async Task<ApplicationUser?> CreateUserFromClaimsAsync(ClaimsPrincipal principal)
     {
         var email = principal.FindFirst("preferred_username")?.Value
-                   ?? principal.FindFirst("email")?.Value ?? "";
-        var firstName = principal.FindFirst("given_name")?.Value ?? "";
-        var lastName = principal.FindFirst("family_name")?.Value ?? "";
+                   ?? principal.FindFirst("email")?.Value 
+                   ?? principal.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value
+                   ?? "";
+        
+        // Try multiple claim type formats
+        var firstName = principal.FindFirst("given_name")?.Value 
+                       ?? principal.FindFirst("givenname")?.Value 
+                       ?? principal.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value
+                       ?? principal.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+                       ?? "";
+        
+        var lastName = principal.FindFirst("family_name")?.Value 
+                      ?? principal.FindFirst("surname")?.Value 
+                      ?? principal.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")?.Value
+                      ?? principal.FindFirst(System.Security.Claims.ClaimTypes.Surname)?.Value
+                      ?? "";
+        
+
         var oid = principal.FindFirst("oid")?.Value ?? "";
 
         _logger.LogInformation("Creating new user: {Email}", email);

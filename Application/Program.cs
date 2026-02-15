@@ -40,6 +40,15 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = "/auth/logout";
 });
 
+// Configure external authentication cookie (disable it to use only the application cookie)
+builder.Services.ConfigureExternalCookie(options =>
+{
+    options.Cookie.Name = "RoversExternal";
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(5); // Short lived, only during OAuth flow
+});
+
 // Register Authentication Service
 builder.Services.AddScoped<AuthenticationService>();
 
@@ -49,7 +58,8 @@ builder.Services.AddAuthentication()
     {
         builder.Configuration.Bind("AzureAd", options);
         options.SaveTokens = true;
-        options.ResponseType = "code"; // Use authorization code flow
+        options.ResponseType = "code";
+        options.SignInScheme = IdentityConstants.ApplicationScheme;
         
         options.Events = new OpenIdConnectEvents
         {
@@ -86,7 +96,8 @@ builder.Services.AddAuthentication()
                 );
             }
         };
-    });
+    },
+    displayName: "Entra ID");
 
 builder.Services.Configure<FrontendOptions>(
     builder.Configuration.GetSection("Frontend"));
@@ -100,10 +111,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:5173")
+        var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:5173";
+        policy.WithOrigins(frontendUrl)
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowCredentials()
+              .SetIsOriginAllowed(origin => origin == frontendUrl);
     });
 });
 
