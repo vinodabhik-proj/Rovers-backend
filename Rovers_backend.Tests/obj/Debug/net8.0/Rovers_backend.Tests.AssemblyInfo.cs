@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Rovers_backend.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d85ce1b4e9a0c2e04daddcee5d09d4237ae7112e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1dc11ad4a701eccc3c23bbb88fd5f474690b699")]
 [assembly: System.Reflection.AssemblyProductAttribute("Rovers_backend.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Rovers_backend.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
