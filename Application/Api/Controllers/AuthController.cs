@@ -42,47 +42,6 @@ public class AuthController : ControllerBase
         return Challenge(properties, OpenIdConnectDefaults.AuthenticationScheme);
     }
 
-    // [HttpGet("auth/entra/callback")]
-    // public async Task<IActionResult> EntraCallback(string? returnUrl = null)
-    // {
-    //     try
-    //     {
-    //         Console.WriteLine("Point Reached!");
-    //         // The user is already authenticated at this point via OpenIdConnect middleware
-    //         if (User?.Identity?.IsAuthenticated == true)
-    //         {
-    //             Console.WriteLine("User is Authenticated");
-    //             var email = User.FindFirst("preferred_username")?.Value
-    //                        ?? User.FindFirst("email")?.Value;
-
-    //             if (!string.IsNullOrEmpty(email))
-    //             {
-    //                 var user = await _userManager.FindByEmailAsync(email);
-
-    //                 if (user != null)
-    //                 {
-    //                     // Sign in with Identity to establish session
-    //                     await _signInManager.SignInAsync(user, isPersistent: true);
-    //                 }
-    //             }
-
-    //             var finalUrl = string.IsNullOrEmpty(returnUrl)
-    //                 ? _frontend.BaseUrl
-    //                 : $"{_frontend.BaseUrl}{returnUrl}";
-
-    //             return Redirect(finalUrl);
-    //         }
-
-    //         Console.WriteLine("User is not authenticated");
-    //         return Redirect($"{_frontend.BaseUrl}/login?error=auth_failed");
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine($"Exception in EntraCallback: {ex.Message}");
-    //         return Redirect($"{_frontend.BaseUrl}/login?error=exception");
-    //     }
-    // }
-
     [Authorize]
     [HttpGet("auth/user")]
     public async Task<IActionResult> Me()

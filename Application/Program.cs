@@ -7,6 +7,7 @@ using Rovers_backend.Data;
 using Rovers_backend.Models;
 using Rovers_backend.Options;
 using Rovers_backend.Services;
+using Rovers_backend.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -160,7 +161,7 @@ app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMiddleware<ExceptionHandler>();
 app.MapControllers();
 
 app.Run();
