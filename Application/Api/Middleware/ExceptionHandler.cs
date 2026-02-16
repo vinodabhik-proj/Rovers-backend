@@ -25,9 +25,8 @@ namespace Rovers_backend.Api.Middleware
 				await _next(context);
 			}
 			catch (Exception ex)
-      {
+      		{
 				_logger.LogError(ex, "Unhandled Exception Error Occurred.");
-
 				context.Response.ContentType = "application/json";
 				context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
@@ -48,7 +47,7 @@ namespace Rovers_backend.Api.Middleware
 				var json = JsonSerializer.Serialize(response, options);
 
 				await context.Response.WriteAsync(json);
-      }
+      		}
 		}
   }
 }
